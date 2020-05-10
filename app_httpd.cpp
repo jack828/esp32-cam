@@ -12,6 +12,9 @@
 #define ENROLL_CONFIRM_TIMES 5
 #define FACE_ID_SAVE_NUMBER 7
 
+#define LED_PIN           4
+bool ledState = false;
+
 #define FACE_COLOR_WHITE  0x00FFFFFF
 #define FACE_COLOR_BLACK  0x00000000
 #define FACE_COLOR_RED    0x000000FF
@@ -480,7 +483,11 @@ static esp_err_t cmd_handler(httpd_req_t *req){
     else if(!strcmp(variable, "brightness")) res = s->set_brightness(s, val);
     else if(!strcmp(variable, "saturation")) res = s->set_saturation(s, val);
     else if(!strcmp(variable, "gainceiling")) res = s->set_gainceiling(s, (gainceiling_t)val);
-    else if(!strcmp(variable, "colorbar")) res = s->set_colorbar(s, val);
+    else if(!strcmp(variable, "colorbar")) {
+      // res = s->set_colorbar(s, val);
+      ledState = !ledState;
+      digitalWrite(LED_PIN, ledState);
+    }
     else if(!strcmp(variable, "awb")) res = s->set_whitebal(s, val);
     else if(!strcmp(variable, "agc")) res = s->set_gain_ctrl(s, val);
     else if(!strcmp(variable, "aec")) res = s->set_exposure_ctrl(s, val);
@@ -554,7 +561,7 @@ static esp_err_t status_handler(httpd_req_t *req){
     p+=sprintf(p, "\"vflip\":%u,", s->status.vflip);
     p+=sprintf(p, "\"hmirror\":%u,", s->status.hmirror);
     p+=sprintf(p, "\"dcw\":%u,", s->status.dcw);
-    p+=sprintf(p, "\"colorbar\":%u,", s->status.colorbar);
+    p+=sprintf(p, "\"colorbar\":%u,", ledState);
     p+=sprintf(p, "\"face_detect\":%u,", detection_enabled);
     p+=sprintf(p, "\"face_enroll\":%u,", is_enrolling);
     p+=sprintf(p, "\"face_recognize\":%u", recognition_enabled);
