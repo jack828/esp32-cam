@@ -484,7 +484,6 @@ static esp_err_t cmd_handler(httpd_req_t *req){
     else if(!strcmp(variable, "saturation")) res = s->set_saturation(s, val);
     else if(!strcmp(variable, "gainceiling")) res = s->set_gainceiling(s, (gainceiling_t)val);
     else if(!strcmp(variable, "colorbar")) {
-      // res = s->set_colorbar(s, val);
       ledState = !ledState;
       digitalWrite(LED_PIN, ledState);
     }

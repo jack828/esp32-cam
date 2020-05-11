@@ -10,3 +10,9 @@ Please check this [very helpful guide](https://randomnerdtutorials.com/esp32-cam
 ## Camera Web Server
 
 The `Color Bar` toggle is used for the flash instead.
+
+## Arduino IDE Flash Options
+
+Board: ESP32 Wrover Module
+Partition Scheme: Huge APP (3MB NO OTA)
+
