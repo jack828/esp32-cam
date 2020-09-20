@@ -11,6 +11,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 <body>
   <div id="container">
     <h2>ESP32-CAM Photo</h2>
+    <p id="error" style="display: none;">Error taking photo</p>
     <p>It might take more than 5 seconds to capture a photo.</p>
     <p>
       <button onclick="rotatePhoto();">ROTATE</button>
@@ -18,14 +19,20 @@ const char index_html[] PROGMEM = R"rawliteral(
       <button onclick="location.reload();">REFRESH PAGE</button>
     </p>
   </div>
-  <div><img src="saved-photo" id="photo" width="70%"></div>
+  <div><img src="/saved-photo" id="photo" width="70%"></div>
 </body>
 <script>
   var deg = 0;
   function capturePhoto() {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', "/capture", true);
-    xhr.send();
+    fetch("/capture")
+      .then((res) => {
+        if (res.status === 200) {
+          window.photo.src = "/saved-photo"
+          window.error.style = "display: none;"
+        } else {
+          window.error.style = "display: block;"
+        }
+      })
   }
   function rotatePhoto() {
     var img = document.getElementById("photo");
