@@ -22,20 +22,20 @@ void setup() {
 
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
+
+  int retryCount = 0;
+  Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
     delay(1000);
-    Serial.println("Connecting to WiFi...");
-  }
-  if (!SPIFFS.begin(true)) {
-    Serial.println("An Error has occurred while mounting SPIFFS");
-    ESP.restart();
-  } else {
-    delay(500);
-    Serial.println("SPIFFS mounted successfully");
+    if (retryCount++ > 20) {
+      Serial.println("\nERROR: Could not connect to wifi, rebooting...");
+      ESP.restart();
+    }
   }
 
   // Print ESP32 Local IP Address
-  Serial.print("IP Address: http://");
+  Serial.print("\nIP Address: http://");
   Serial.println(WiFi.localIP());
 
   // OV2640 camera module
