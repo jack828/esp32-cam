@@ -98,6 +98,11 @@ void setup() {
 
     esp_camera_fb_return(frame);
   });
+
+  server.onNotFound([](AsyncWebServerRequest *request){
+    request->send(404);
+  });
+
   // Start server
   server.begin();
 }
