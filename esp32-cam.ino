@@ -7,9 +7,6 @@
 #include "soc/rtc_cntl_reg.h"
 #include "driver/rtc_io.h"
 #include <ESPAsyncWebServer.h>
-#include <StringArray.h>
-#include <SPIFFS.h>
-#include <FS.h>
 #include "camera_pins.h"
 #include "index.h"
 
@@ -18,11 +15,6 @@ const char* ssid = "Erebus";
 const char* password = "New-Horizons-1";
 
 AsyncWebServer server(80);
-
-boolean takeNewPhoto = false;
-
-// Photo File Name to save in SPIFFS
-#define FILE_PHOTO "/photo.jpg"
 
 void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
@@ -85,23 +77,18 @@ void setup() {
     ESP.restart();
   }
 
-  // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send_P(200, "text/html", index_html);
   });
 
-  server.on("/capture", HTTP_GET, [](AsyncWebServerRequest * request) {
-    takeNewPhoto = true;
-    request->send_P(200, "text/plain", "Taking Photo");
-  });
-
-  server.on("/saved-photo", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->send(SPIFFS, FILE_PHOTO, "image/jpg", false);
-  });
-
-  server.on("/picture", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/image", HTTP_GET, [](AsyncWebServerRequest * request) {
     camera_fb_t * frame = NULL;
     frame = esp_camera_fb_get();
+    if (!frame || frame->len == 0) {
+      Serial.println("Camera capture failed");
+      request->send(500);
+      return false;
+    }
     request->send_P(
       200,
       "image/jpeg",
@@ -116,55 +103,4 @@ void setup() {
 }
 
 void loop() {
-  if (takeNewPhoto) {
-    capturePhotoSaveSpiffs();
-    takeNewPhoto = false;
-  }
-  delay(1);
-}
-
-// Check if photo capture was successful
-boolean checkPhoto(fs::FS &fs) {
-  File f_pic = fs.open(FILE_PHOTO);
-  unsigned int pic_size = f_pic.size();
-  return (pic_size > 100);
-}
-
-// Capture Photo and Save it to SPIFFS
-boolean capturePhotoSaveSpiffs(void) {
-  camera_fb_t * fb = NULL; // pointer
-  boolean ok = false; // Boolean indicating if the picture has been taken correctly
-
-  // Take a photo with the camera
-  Serial.println("Taking a photo...");
-
-  fb = esp_camera_fb_get();
-  if (!fb || fb->len == 0) {
-    Serial.println("Camera capture failed");
-    return false;
-  }
-
-  // Photo file name
-  Serial.printf("Picture file name: %s\n", FILE_PHOTO);
-  File file = SPIFFS.open(FILE_PHOTO, FILE_WRITE);
-
-  // Insert the data in the photo file
-  if (!file) {
-    Serial.println("Failed to open file in writing mode");
-    return false;
-  } else {
-    file.write(fb->buf, fb->len); // payload (image), payload length
-    Serial.print("The picture has been saved in ");
-    Serial.print(FILE_PHOTO);
-    Serial.print(" - Size: ");
-    Serial.print(file.size());
-    Serial.println(" bytes");
-  }
-  // Close the file
-  file.close();
-  esp_camera_fb_return(fb);
-
-  // check if file has been correctly saved in SPIFFS
-  ok = checkPhoto(SPIFFS);
-  return ok;
 }
